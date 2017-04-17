@@ -2,7 +2,7 @@ variable "name" {}
 
 variable "user_data" {
   default = "#!/bin/sh
-    touch /dev/null"
+      touch /dev/null"
 }
 
 variable "instance_type" {
