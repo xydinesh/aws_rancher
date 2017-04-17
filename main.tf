@@ -16,9 +16,9 @@ module "rancher_server" {
   instance_type   = "${var.instance_type}"
 
   user_data = "#!/bin/sh
-        apt-get update
-        apt-get install -y docker.io
-        sudo docker run -d --restart=unless-stopped -p 8080:8080 rancher/server"
+          apt-get update
+          apt-get install -y docker.io
+          sudo docker run -d --restart=unless-stopped -p 8080:8080 rancher/server"
 }
 
 module "rancher_agent" {
@@ -36,7 +36,6 @@ data "template_file" "agent-userdata" {
 
   vars {
     server_ip_address = "${element(split(",", module.rancher_server.public_ip), 0)}"
-    agent_ip_address = ["${split(",", module.rancher_agent.public_ip)}]"
   }
 }
 
