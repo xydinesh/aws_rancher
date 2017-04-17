@@ -1,0 +1,24 @@
+#!/bin/bash
+sudo apt-get update
+sudo apt-get install -y docker.io
+sudo apt-get install -y jq
+
+# wait for server to come live
+SERVER_URL="http://${server_ip_address}:8080/v1"
+LIVE=`curl -s $SERVER_URL | jq -r '.id'`
+while [[ $LIVE != "v1" ]]
+do
+echo "waiting for server ${server_ip_address} to come online";
+LIVE=`curl -s $SERVER_URL | jq -r '.id'`
+sleep $(( ( RANDOM % 20 )  + 1 ))
+done
+
+# continue adding hosts
+export PID=`curl -s -X GET -H \"Accept: application/json\" http://${server_ip_address}:8080/v1/projects | jq  -r '.data[0].id'`
+export TID=`curl -s -X POST -H \"Accept: application/json\" -H \"Content-Type: application/json\" http://${server_ip_address}:8080/v1/projects/$PID/registrationTokens | jq -r '.id'`
+export REGISTRATION_URL=`curl -s -X GET -H \"Accept: application/json\" http://${server_ip_address}:8080/v1/projects/$PID/registrationToken/$TID | jq -r '.links.registrationUrl'`
+
+sleep $(( ( RANDOM % 30 )  + 1 ))
+ID=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1`
+sudo docker run -e CATTLE_HOST_LABELS="rancher-agent-$ID"  --rm --privileged -v /var/run/docker.sock:/var/run/docker.sock -v /var/lib/rancher:/var/lib/rancher rancher/agent:v1.2.2 $REGISTRATION_URL
+
